@@ -1,3 +1,30 @@
+<?php
+    session_start();
+    try {
+        $bdd = new PDO('mysql:host=localhost;dbname=pfeolaitan', 'root', 'root', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+    }
+    catch (Exception $e) {
+        die('Erreur : ' . $e->getMessage());
+    }
+    if (isset($_POST['mailsign'], $_POST['passwo']) && !empty($_POST['mailsign']) && !empty($_POST['passwo'])) {
+          $requete=$bdd->prepare('SELECT * FROM client WHERE mailo=:mail AND pass=:passo');
+          $requete->execute(array('mail'=>$_POST['mailsign'], 'passo'=>$_POST['passwo']));
+          if ($lack=$requete->fetch()) {
+              $_SESSION['id']=$lack['idclt'];
+              $_SESSION['email']=$lack['mailo'];
+              $_SESSION['univer']=$lack['university'];
+              $_SESSION['pass']=$lack['pass'];
+              $_SESSION['fullname']=$lack['name'];
+              header('Location: index.php');
+           }
+    }
+    if (isset($_POST['cmpname'], $_POST['mailo'], $_POST['uni'], $_POST['pass']) && !empty($_POST['cmpname']) && !empty($_POST['mailo']) && !empty($_POST['uni']) && !empty($_POST['pass'])) {
+      
+          $donne=$bdd->prepare('INSERT INTO client(name, mailo, pass, university) VALUES
+          (:namo, :mail, :passwor, :univer)');
+          $donne->execute(array('namo'=>$_POST['cmpname'], 'mail'=>$_POST['mailo'], 'passwor'=>$_POST['pass'], 'univer'=>$_POST['uni']));
+    }
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -22,6 +49,7 @@
     <!-- Customized Bootstrap Stylesheet -->
     <link href="css/style.css" rel="stylesheet">
     <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 </head>
 <!--style="background: url('img/backbody1.jpg'); background-repeat: none; background-attachment: fixed; background-size: cover; height: auto;"-->
 <body class="overflowX-hidden">
@@ -39,16 +67,16 @@
             </div>
             <div class="col-lg-6 text-center text-lg-right">
                 <div class="d-inline-flex align-items-center">
-                    <a class="text-dark px-2" href="">
+                    <a class="text-dark px-2" href="https://www.facebook.com/OLaitanBusinessAttitude/">
                         <i class="fab fa-facebook-f"></i>
                     </a>
                     <a class="text-dark px-2" href="">
                         <i class="fab fa-twitter"></i>
                     </a>
-                    <a class="text-dark px-2" href="">
+                    <a class="text-dark px-2" href="https://www.linkedin.com/company/olaitan-organization">
                         <i class="fab fa-linkedin-in"></i>
                     </a>
-                    <a class="text-dark px-2" href="">
+                    <a class="text-dark px-2" href="https://www.instagram.com/olaitan_organization">
                         <i class="fab fa-instagram"></i>
                     </a>
                     <a class="text-dark pl-2" href="">
@@ -60,7 +88,7 @@
         <div class="row align-items-center py-0 pr-xl-5 bg-warning">
             <div class="col-lg-3 d-none d-lg-block p-0 m-0 border-dark">
                     <!--<h1 class="m-0 display-5 font-weight-semi-bold text-dark"><span class="text-yellow font-weight-bold border px-3 mr-1 text-white" style="background: black; color: black; border-radius: 10px; border: 2px solid black;">PFE</span>OLAITAN</h1>-->
-                    <a class="navbar-brand p-0" href="#" style="border: none;">
+                    <a class="navbar-brand p-0 border-0" href="#" style="border: none;">
                       <img src="img/logo_pfe.png" class="p-0" alt="" width="400" height="95">
                     </a>
 
@@ -68,16 +96,22 @@
             <div class="col-6 col-lg-6 col-md-0 col-sm-6 text-left">
             </div>
             <div class="col-lg-3 col-6 text-right d-none d-lg-block">
+                <?php
+                  if (isset($_SESSION['id']) && !empty($_SESSION['id'])) {
+                      $compter=$bdd->query('SELECT COUNT(idachclt) AS idcmp, idachclt FROM acheter WHERE idachclt='.$_SESSION['id'].'');
+                      $compterval=$compter->fetch();
+                  }
+                ?>
                 <a href="" class="btn border-3" style="border-radius: 10px; border-color: black;">
                     <i class="fas fa-shopping-cart text-dark" style="color: black;"></i>
-                    <span class="badge text-dark">0</span>
+                    <span class="badge text-dark"><?php if (isset($_SESSION['id']) && !empty($_SESSION['id'])){echo $compterval['idcmp'];}?></span>
                 </a>
             </div>
         </div>
     </div>
     <nav class="navbar navbar-expand-lg bg-warning navbar-light py-3 py-lg-0 px-0 d-block d-lg-none">
         <div class="container-fluid pr-3">
-                    <a class="navbar-brand d-block d-lg-none position-relative" href="#" style="border: 2px solid red; right: 40px;">
+                    <a class="navbar-brand d-block d-lg-none position-relative" href="#" style="right: 40px;">
                       <img src="img/logo_pfe.png" class="ml-0" alt="" width="280" height="70">
                     </a>
                     <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
@@ -116,22 +150,22 @@
 
                                                 }
                                                     </style>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-calculator text-dark"></i> Comptabilite</a>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-certificate text-dark"></i> Fiscalite</a>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-list-check text-dark"></i> Gestion</a>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-leaf text-dark"></i> Nature</a>
+                                                    <a href="shop.php?typo=Comptabilite" class="nav-item nav-link"><i class="fa-solid fa-calculator text-dark"></i> Comptabilite</a>
+                                                    <a href="shop.php?typo=Fiscalite" class="nav-item nav-link"><i class="fa-solid fa-certificate text-dark"></i> Fiscalite</a>
+                                                    <a href="shop.php?typo=Gestion" class="nav-item nav-link"><i class="fa-solid fa-list-check text-dark"></i> Gestion</a>
+                                                    <a href="shop.php?typo=Nature" class="nav-item nav-link"><i class="fa-solid fa-leaf text-dark"></i> Nature</a>
                                                 </div>
                                                 <div>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-dna text-dark"></i> Biologie</a>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-atom text-dark"></i> Physique</a>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-microchip text-dark"></i> Technologie</a>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-book text-dark"></i> Religiuos</a>
+                                                    <a href="shop.php?typo=Biologie" class="nav-item nav-link"><i class="fa-solid fa-dna text-dark"></i> Biologie</a>
+                                                    <a href="shop.php?typo=Physique" class="nav-item nav-link"><i class="fa-solid fa-atom text-dark"></i> Physique</a>
+                                                    <a href="shop.php?typo=Technologie" class="nav-item nav-link"><i class="fa-solid fa-microchip text-dark"></i> Technologie</a>
+                                                    <a href="shop.php?typo=Religiuos" class="nav-item nav-link"><i class="fa-solid fa-book text-dark"></i> Religiuos</a>
                                                 </div>
                                                 <div>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-coins text-dark"></i> Economie</a>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-music text-dark"></i> Music</a>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-masks-theater text-dark"></i> Theatre</a>
-                                                    <a href="" class="nav-item nav-link"><i class="fa-solid fa-user-tie text-dark"></i> Professional</a>
+                                                    <a href="shop.php?typo=Economie" class="nav-item nav-link"><i class="fa-solid fa-coins text-dark"></i> Economie</a>
+                                                    <a href="shop.php?typo=Music" class="nav-item nav-link"><i class="fa-solid fa-music text-dark"></i> Music</a>
+                                                    <a href="shop.php?typo=Theatre" class="nav-item nav-link"><i class="fa-solid fa-masks-theater text-dark"></i> Theatre</a>
+                                                    <a href="shop.php?typo=Professional" class="nav-item nav-link"><i class="fa-solid fa-user-tie text-dark"></i> Professional</a>
                                                 </div>
                                     </div>
                                 </div>
@@ -170,8 +204,80 @@
 
                             </div>
                              <div class="navbar-nav ml-auto py-0">
-                            <a href="" class="nav-item nav-link">Login</a>
-                            <a href="" class="nav-item nav-link">Register</a>
+                            <button type="button" class="btn btn-white button_affiche" data-toggle="modal" data-target="#monmodal3">
+                                Log in
+                            </button>
+                            <div class="modal" id="monmodal3">
+                                <div class="modal-dialog bg-light">
+                                    <div class="modal-header" style="font-family: Century Gothic; font-size: 2em;">
+                                        <span class="text-dark">Log in</span>
+                                        <span class="back_poper about_back"></span>
+                                        <span></span>
+                                    </div>
+                                    <div class="modal-content">
+                                        <div class="modal-body d-flex justify-content-around flex-column text-dark" style="z-index: 400;">
+                                            <form action="index.php" method="post">
+                                                <div class="form-floating mb-3">
+                                                  <input type="email" class="form-control inputage" id="floatingInput" name="mailsign" placeholder="name@example.com">
+                                                  <label for="floatingInput">Email address</label>
+                                                </div>
+                                                <div class="form-floating">
+                                                  <input type="password" class="form-control inputage inppass" id="floatingPassword" name="passwo" placeholder="Password">
+                                                  <label for="floatingPassword">Password</label>
+                                                </div>
+                                                <div class="envoyeur">
+                                                    <button type="submit" class="btn btn-warning mt-3 envoie"style="cursor: pointer;">Submit</button>
+                                                    <button type="reset" class="btn btn-warning mt-2 envoie"style="cursor: pointer;">Reset</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-dark text-white fw-bold butona" data-bs-dismiss="modal">Close Tab</button>
+                                  </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-white button_affiche" data-toggle="modal" data-target="#monmodal4">
+                                Register
+                            </button>
+                            <div class="modal" id="monmodal4">
+                                <div class="modal-dialog bg-light">
+                                    <div class="modal-header" style="font-family: Century Gothic; font-size: 2em;">
+                                        <span class="text-dark">Register</span>
+                                        <span class="back_poper back_reg"></span>
+                                        <span></span>
+                                    </div>
+                                    <div class="modal-content">
+                                        <div class="modal-body d-flex justify-content-around flex-column text-dark" style="z-index: 400;">
+                                            <form action="index.php" method="post">
+                                                <div class="form-floating mb-3">
+                                                  <input type="text" class="form-control inputage" id="floatingInput" name="cmpname" placeholder="name@example.com">
+                                                  <label for="floatingInput">Full Name</label>
+                                                </div>
+                                                <div class="form-floating mb-3">
+                                                  <input type="text" class="form-control inputage inppass" id="floatingInput3" name="uni" placeholder="Password">
+                                                  <label for="floatingInput3">School Or University Name</label>
+                                                </div>
+                                                <div class="form-floating mb-3">
+                                                  <input type="email" class="form-control inputage inppass" id="floatingInput2" name="mailo" placeholder="name@example.com">
+                                                  <label for="floatingInput2">E-mail</label>
+                                                </div>
+                                                <div class="form-floating mb-3">
+                                                  <input type="password" class="form-control inputage inppass" id="floatingPassword2" name="pass" placeholder="Password">
+                                                  <label for="floatingPassword2">Password</label>
+                                                </div>
+                                                <div class="envoyeur">
+                                                    <button type="submit" class="btn btn-warning mt-0 envoie"style="cursor: pointer;">Submit</button>
+                                                    <button type="reset" class="btn btn-warning mt-2 envoie"style="cursor: pointer;">Reset</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-dark text-white fw-bold butona" data-bs-dismiss="modal">Close Tab</button>
+                                  </div>
+                                </div>
+                            </div>
                         </div>
                         </div>
                     </div>
@@ -210,25 +316,25 @@
                             }
                             </style>
                         <div>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-calculator text-dark mr-2"></i> Comptabilite</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-certificate text-dark mr-2"></i> Fiscalite</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-list-check text-dark mr-2"></i> Gestion</a>
+                            <a href="shop.php?typo=Comptabilite" class="nav-item nav-link"><i class="fa-solid fa-calculator text-dark mr-2"></i> Comptabilite</a>
+                            <a href="shop.php?typo=Fiscalite" class="nav-item nav-link"><i class="fa-solid fa-certificate text-dark mr-2"></i> Fiscalite</a>
+                            <a href="shop.php?typo=Gestion" class="nav-item nav-link"><i class="fa-solid fa-list-check text-dark mr-2"></i> Gestion</a>
                             
                         </div>
                         <div>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-dna text-dark mr-2"></i> Biologie</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-atom text-dark mr-2"></i> Physique</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-microchip text-dark mr-2"></i> Technologie</a>
+                            <a href="shop.php?typo=Biologie" class="nav-item nav-link"><i class="fa-solid fa-dna text-dark mr-2"></i> Biologie</a>
+                            <a href="shop.php?typo=Physique" class="nav-item nav-link"><i class="fa-solid fa-atom text-dark mr-2"></i> Physique</a>
+                            <a href="shop.php?typo=Technologie" class="nav-item nav-link"><i class="fa-solid fa-microchip text-dark mr-2"></i> Technologie</a>
                         </div>
                         <div>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-coins text-dark mr-2"></i> Economie</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-music text-dark mr-2"></i> Music</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-masks-theater text-dark mr-2"></i> Theatre</a>
+                            <a href="shop.php?typo=Economie" class="nav-item nav-link"><i class="fa-solid fa-coins text-dark mr-2"></i> Economie</a>
+                            <a href="shop.php?typo=Music" class="nav-item nav-link"><i class="fa-solid fa-music text-dark mr-2"></i> Music</a>
+                            <a href="shop.php?typo=Theatre" class="nav-item nav-link"><i class="fa-solid fa-masks-theater text-dark mr-2"></i> Theatre</a>
                         </div>
                         <div>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-leaf text-dark mr-2"></i> Nature</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-book text-dark mr-2"></i> Religiuos</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-user-tie text-dark mr-2"></i> Professional</a>
+                            <a href="shop.php?typo=Nature" class="nav-item nav-link"><i class="fa-solid fa-leaf text-dark mr-2"></i> Nature</a>
+                            <a href="shop.php?typo=Religiuos" class="nav-item nav-link"><i class="fa-solid fa-book text-dark mr-2"></i> Religiuos</a>
+                            <a href="shop.php?typo=Professional" class="nav-item nav-link"><i class="fa-solid fa-user-tie text-dark mr-2"></i> Professional</a>
                         </div>
                         
                     </div>
@@ -313,27 +419,27 @@
                             </div>
                             <div class="nav-item dropdown d-block d-lg-none">
                                 <a href="#" class="nav-link dropdown-toggle d-flex justify-content-around align-items-center" data-toggle="dropdown">Category</a><!---->
-                                <div class="dropdown-menu rounded-0 m-0">sss
+                                <div class="dropdown-menu rounded-0 m-0">
                                     <div>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-calculator text-dark mr-2"></i> Comptabilite</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-certificate text-dark mr-2"></i> Fiscalite</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-list-check text-dark mr-2"></i> Gestion</a>
+                            <a href="shop.php?typo=Comptabilite" class="nav-item nav-link"><i class="fa-solid fa-calculator text-dark mr-2"></i> Comptabilite</a>
+                            <a href="shop.php?typo=Fiscalite" class="nav-item nav-link"><i class="fa-solid fa-certificate text-dark mr-2"></i> Fiscalite</a>
+                            <a href="shop.php?typo=Gestion" class="nav-item nav-link"><i class="fa-solid fa-list-check text-dark mr-2"></i> Gestion</a>
                             
                         </div>
                         <div>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-dna text-dark mr-2"></i> Biologie</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-atom text-dark mr-2"></i> Physique</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-microchip text-dark mr-2"></i> Technologie</a>
+                            <a href="shop.php?typo=Biologie" class="nav-item nav-link"><i class="fa-solid fa-dna text-dark mr-2"></i> Biologie</a>
+                            <a href="shop.php?typo=Physique" class="nav-item nav-link"><i class="fa-solid fa-atom text-dark mr-2"></i> Physique</a>
+                            <a href="shop.php?typo=Technologie" class="nav-item nav-link"><i class="fa-solid fa-microchip text-dark mr-2"></i> Technologie</a>
                         </div>
                         <div>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-coins text-dark mr-2"></i> Economie</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-music text-dark mr-2"></i> Music</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-masks-theater text-dark mr-2"></i> Theatre</a>
+                            <a href="shop.php?typo=Economie" class="nav-item nav-link"><i class="fa-solid fa-coins text-dark mr-2"></i> Economie</a>
+                            <a href="shop.php?typo=Music" class="nav-item nav-link"><i class="fa-solid fa-music text-dark mr-2"></i> Music</a>
+                            <a href="shop.php?typo=Theatre" class="nav-item nav-link"><i class="fa-solid fa-masks-theater text-dark mr-2"></i> Theatre</a>
                         </div>
                         <div>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-leaf text-dark mr-2"></i> Nature</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-book text-dark mr-2"></i> Religiuos</a>
-                            <a href="" class="nav-item nav-link"><i class="fa-solid fa-user-tie text-dark mr-2"></i> Professional</a>
+                            <a href="shop.php?typo=Nature" class="nav-item nav-link"><i class="fa-solid fa-leaf text-dark mr-2"></i> Nature</a>
+                            <a href="shop.php?typo=Religiuos" class="nav-item nav-link"><i class="fa-solid fa-book text-dark mr-2"></i> Religiuos</a>
+                            <a href="shop.php?typo=Professional" class="nav-item nav-link"><i class="fa-solid fa-user-tie text-dark mr-2"></i> Professional</a>
                         </div>
 
                                 </div>
@@ -341,10 +447,10 @@
                         </div>
                         <div class="navbar-nav ml-auto py-0">
                             <!--<a href="" class="nav-item nav-link">Login</a>-->
-                            <button type="button" class="btn btn-white button_affiche" data-toggle="modal" data-target="#monmodal3">
+                            <button type="button" class="btn btn-white button_affiche" data-toggle="modal" data-target="#monmodal33">
                                 Log in
                             </button>
-                            <div class="modal" id="monmodal3">
+                            <div class="modal" id="monmodal33">
                                 <div class="modal-dialog bg-light">
                                     <div class="modal-header" style="font-family: Century Gothic; font-size: 2em;">
                                         <span class="text-dark">Log in</span>
@@ -353,13 +459,13 @@
                                     </div>
                                     <div class="modal-content">
                                         <div class="modal-body d-flex justify-content-around flex-column text-dark" style="z-index: 400;">
-                                            <form>
+                                            <form action="index.php" method="post">
                                                 <div class="form-floating mb-3">
-                                                  <input type="email" class="form-control inputage" id="floatingInput" placeholder="name@example.com">
+                                                  <input type="email" class="form-control inputage" id="floatingInput" name="mailsign" placeholder="name@example.com">
                                                   <label for="floatingInput">Email address</label>
                                                 </div>
                                                 <div class="form-floating">
-                                                  <input type="password" class="form-control inputage inppass" id="floatingPassword" placeholder="Password">
+                                                  <input type="password" class="form-control inputage inppass" id="floatingPassword" name="passwo" placeholder="Password">
                                                   <label for="floatingPassword">Password</label>
                                                 </div>
                                                 <div class="envoyeur">
@@ -374,10 +480,10 @@
                                   </div>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-white button_affiche" data-toggle="modal" data-target="#monmodal4">
+                            <button type="button" class="btn btn-white button_affiche" data-toggle="modal" data-target="#monmodal44">
                                 Register
                             </button>
-                            <div class="modal" id="monmodal4">
+                            <div class="modal" id="monmodal44">
                                 <div class="modal-dialog bg-light">
                                     <div class="modal-header" style="font-family: Century Gothic; font-size: 2em;">
                                         <span class="text-dark">Register</span>
@@ -386,22 +492,22 @@
                                     </div>
                                     <div class="modal-content">
                                         <div class="modal-body d-flex justify-content-around flex-column text-dark" style="z-index: 400;">
-                                            <form>
+                                            <form action="index.php" method="post">
                                                 <div class="form-floating mb-3">
-                                                  <input type="text" class="form-control inputage" id="floatingInput" placeholder="name@example.com">
+                                                  <input type="text" class="form-control inputage" id="floatingInput" name="cmpname" placeholder="name@example.com">
                                                   <label for="floatingInput">Full Name</label>
                                                 </div>
                                                 <div class="form-floating mb-3">
-                                                  <input type="password" class="form-control inputage inppass" id="floatingPassword" placeholder="Password">
-                                                  <label for="floatingPassword">School Or University Name</label>
+                                                  <input type="text" class="form-control inputage inppass" id="floatingInput3" name="uni" placeholder="Password">
+                                                  <label for="floatingInput3">School Or University Name</label>
                                                 </div>
                                                 <div class="form-floating mb-3">
-                                                  <input type="email" class="form-control inputage inppass" id="floatingInput" placeholder="name@example.com">
-                                                  <label for="floatingInput">E-mail</label>
+                                                  <input type="email" class="form-control inputage inppass" id="floatingInput2" name="mailo" placeholder="name@example.com">
+                                                  <label for="floatingInput2">E-mail</label>
                                                 </div>
                                                 <div class="form-floating mb-3">
-                                                  <input type="password" class="form-control inputage inppass" id="floatingPassword" placeholder="Password">
-                                                  <label for="floatingPassword">Password</label>
+                                                  <input type="password" class="form-control inputage inppass" id="floatingPassword2" name="pass" placeholder="Password">
+                                                  <label for="floatingPassword2">Password</label>
                                                 </div>
                                                 <div class="envoyeur">
                                                     <button type="submit" class="btn btn-warning mt-0 envoie"style="cursor: pointer;">Submit</button>
@@ -418,47 +524,11 @@
                         </div>
                     </div>
                 </nav>
-                <style type="text/css">
-                             .card-footer .btn i{
-                                font-size: 2em;
-                             }
-                            .nav-link, .card-footer .btn i{
-                                color: black;
-                            }
-                            .collapse .navbar-nav .nav-link:hover, .card-footer .btn i:hover, .card-footer .btn a:hover, .card-footer .btn i:focus, .card-footer .btn a:focus, .nav-link:focus{
-                                color: gray;
-                            }
-                            .card-footer .btn i:hover, .card-footer .btn i:focus{
-                                color: #ffc107;
-                            }
-                </style>
-                
                 <div class="container-fluid mt-0 bottomage">
                     <div class="row">
                         <div class="col-lg-12">
-                            <div id="header-carousel" class="carousel slide border-dark" data-ride="carousel" style="width: 101.2%; width: 101.2%; min-width: 101.2%;">
+                            <div id="header-carousel" class="carousel slide border-dark" data-ride="carousel" style="width: 101.2%; min-width: 101.2%;">
                                 <div class="carousel-inner adapter bg-warning">
-                                <style type="text/css">
-                                    @media (max-height: 950px) and (max-width: 550px) {
-                                            .adapter {
-                                                height: 83vh;
-                                                width: 100%;
-                                            }
-                                            .imageo{
-                                                height: 83vh;
-                                                min-height: 83vh;
-                                            }
-                                            .carousel-inner,  .shapedividers_com-275{
-                                                margin: 0px;
-                                                width: 106%;
-                                            }
-                                            .bottomage, .shapedividers_com-275{
-                                                position: relative;
-                                                bottom: 5px;
-                                            }
-                                    }
-                                    
-                                </style>
                                     <div class="carousel-item active imageo" style="height: 550px;">
                                         <img class="img-fluid" src="https://th.bing.com/th/id/R.65c9663e31e1b4c113810227cc1c0b12?rik=0eiGF4AxpnRPBA&pid=ImgRaw&r=0" alt="Image">
                                         <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
@@ -507,7 +577,7 @@
                             </div>
                         </a>
                     </div>
-                    <div class="shapedividers_com-275 text-white position-relative"></div>
+                     <div class="shapedividers_com-275 text-white position-relative"></div>
                 </div>
                 <style type="text/css">
                     .shapedividers_com-275{
@@ -544,42 +614,34 @@
                                             }
                                     }
                 </style>
+                </div>
                 <style type="text/css">
-                                .slide-in, .slide-in1, .slide-in2, .slide-in3 {
-                                    max-width: 900px;
-                                    margin: 0px 0px;
-                                    padding: 20px;
-                                    transform: translateX(-100%);
-                                    opacity: 0;
-                                    transition: transform 0.6s ease-in-out,
-                                    opacity 0.6s ease-in-out;
-                                }
-                                .slide-in.active, .slide-in1.active1, .slide-in2.active2, .slide-in3.active3 {
-                                    transform: translateX(0%);
-                                    opacity: 1;
-                                }
-                                .slide-in h2 {
-                                    font-size: 40px;
-                                    text-align: center;
-                                    color: #f1f1f1;
-                                }
-                            </style>
+                    .container-fluid{
+                        overflow: hidden;
+                    }
+                    body{
+                        overflow-x: hidden;
+                    }
+                </style>
                 <div class="container-fluid text-dark hilling">
                     <div class="text-center mb-4">
                     </div>
                     <div class="row justify-content-around align-items-center">
-                        <div class="col-sm-12 col-lg-6 text-dark nono justify-content-around">
+                        <div class="col-sm-12 col-lg-6 text-dark nono justify-content-around asmae" data-aos="flip-left" data-aos-duration="1000">
                             <img src="img/personne.png" class="imagique from-left ml-lg-5" width="80%">  
                         </div>
                         <style type="text/css">
                             .hilling{
                                 overflow-x: hidden;
                             }
+                            .asmae{
+                                overflow-y: hidden;
+                            }
                             .imagique, .nono{
                                 /*border: 2px solid red;*/
                             }
                         </style>
-                        <div class="col-sm-12 col-lg-6 text-dark text-center">
+                        <div class="col-sm-12 col-lg-6 text-dark text-center" data-aos="flip-right" data-aos-duration="1000">
                             <h2 class="section-title px-5 fs-sm-3 fs-1 text-dark hi">
                                 <span class="px-2 text-dark display-8 fst-italic hello" style="font-family: verdana;"><span class="bg-warning p-2 rounded-2">What</span> we offer ?</span>
                             </h2>
@@ -588,7 +650,7 @@
                             </p>
                             <style type="text/css">
                                 .justifiacation{
-                                    text-align: justify;
+                                    text-align: right;
                                     line-height: 40px;
                                     font-family: Century Gothic;
                                 }
@@ -621,16 +683,19 @@
                         </div>
                     </div>
                 </div>
-                <div class="container-fluid text-dark hilling">
+                <div class="container-fluid text-dark hilling" data-aos="fade-left" data-aos-duration="1000">
                     <div class="text-center mb-4">
                     </div>
                     <div class="row justify-content-around align-items-center pl-lg-5">
-                        <div class="col-sm-12 col-lg-6 text-dark text-center">
+                        <div class="col-sm-12 col-lg-6 text-dark nono justify-content-around d-block d-lg-none" data-aos="flip-right" data-aos-duration="1000">
+                            <img src="img/pc.png" class="imagique" width="80%">  
+                        </div>
+                        <div class="col-sm-12 col-lg-6 text-dark text-center" data-aos="flip-left" data-aos-duration="1000">
                             <h2 class="section-title px-5 fs-sm-3 fs-1 text-dark hi">
                                 <span class="px-2 text-dark display-8 fst-italic hello" style="font-family: verdana;"><span class="bg-warning p-2 rounded-2">Shop</span> Olaitan</span>
                             </h2>
-                            <p class="text-dark my-3 fs-4 justifiacation hi px-lg-5 lh-lg">
-                                <span class="premierlettre"><span class="fs-1 text-dark position-relative" style="z-index: 200;">W</span></span>ith <span class="shadow-sm px-2 py-1 rounded fw-bold" style="background: #F1E784;">PFE-OLAITAN</span> your shop is in your pocket
+                            <p class="text-dark my-3 fs-4 text-left hi px-lg-5 lh-lg">
+                                <span class="premierlettre"><span class="fs-1 text-dark position-relative" style="z-index: 200;">W</span></span>ith <span class="shadow-sm px-2 py-1 rounded fw-bold" style="background: #F1E784;">PFE-OLAITAN</span> customize and download adorable final projects templates to make stunning designs with our impressive designs. Start picking your design to support your knowledge and effort with a touch of creativity...
                             </p>
                             <style type="text/css">
                                 /*.justifiacation{
@@ -665,51 +730,229 @@
                                 }*/
                             </style>
                         </div>
-                        <div class="col-sm-12 col-lg-6 text-dark nono justify-content-around slide-in">
+                        <div class="col-sm-12 col-lg-6 text-dark nono justify-content-around d-none d-lg-block" data-aos="flip-right" data-aos-duration="1000">
                             <img src="img/pc.png" class="imagique" width="80%">  
                         </div>
                     </div>
                 </div>
                 </style>
-                <!--<div class="shapedividers_com-3632" style=" width: 100%; min-width: 100%;"></div>
-                    <style type="text/css">
-                        .shapedividers_com-3632{
-                        overflow:hidden;
-                        position:relative;
-                        overflow:hidden;
-                        position:relative;
-                        width: 100%;
-                        height: 100px;                    
-                        }
-                        .shapedividers_com-3632::before{ 
-                        content:'';
-                        font-family:'shape divider from ShapeDividers.com';
-                        position: absolute;
-                        z-index: 3;
-                        pointer-events: none;
-                        background-repeat: no-repeat;
-                        bottom: -0.1vw;
-                        left: -0.1vw;
-                        right: -0.1vw;
-                        top: -0.1vw; 
-                        background-size: 100% 90px;
-                        background-position: 50% 100%;  background-image: url('data:image/svg+xml;charset=utf8, <svg preserveAspectRatio="xMidYMin slice" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 73"><g fill="%23ffc107"><path d="M0 73V60c6-1 12-2 16-7a48 48 0 005-6 46 46 0 012-4c3-3 7-6 11-6 4 1 7 4 11 3s7-4 9-7 4-7 8-8 7 1 11 4l3 1a23 23 0 0013 2 29 29 0 0014-6l3-2c5-4 9-10 12-15l12 15h1c4 4 10 8 17 9a23 23 0 0012-2l1-1c4-2 9-6 14-5 4 1 6 5 8 8s5 7 9 7 7-2 11-3c4 0 8 3 10 6l1 1 6 9c5 5 11 7 18 7a26 26 0 016 0 27 27 0 015 0c7 0 13-2 18-7l6-8 1-2c3-3 6-6 11-6 3 1 7 4 11 3s6-4 8-7 5-7 8-8a10 10 0 017 1l7 4a23 23 0 0014 2 29 29 0 0013-5 38 38 0 004-3l12-15c4 5 7 11 12 15s11 8 17 8a23 23 0 0013-2c5-2 10-6 15-5 3 1 6 5 8 8s4 7 8 7 8-2 11-3c5 0 8 3 11 6l1 2 6 8c5 5 11 7 18 7a26 26 0 015 0 27 27 0 016 0c7 0 13-2 18-7a52 52 0 004-7l3-3c2-3 6-6 10-6 4 1 7 4 11 3s7-4 9-7 4-7 8-8c5-1 9 2 13 4l1 1a23 23 0 0014 2 30 30 0 0014-6l2-2c5-4 9-10 13-15 3 5 7 11 12 15l1 1c4 4 10 7 16 8a23 23 0 0013-3h1c4-3 9-6 13-5s6 5 8 8 5 7 9 7 7-2 11-3c4 0 8 3 11 6l1 1 6 9c5 5 11 7 18 7a26 26 0 015 0 27 27 0 016 0c6 0 13-2 17-7 3-2 4-5 6-8l1-2c3-3 7-6 11-6 4 1 7 4 11 3s7-4 9-7 4-7 8-8c3-1 5 0 8 2l6 3a23 23 0 0013 3 29 29 0 0014-6 41 41 0 003-3c5-4 9-10 12-15 4 5 8 11 13 15 5 5 10 8 17 9a23 23 0 0010-1 22 22 0 003-2c5-2 9-6 14-5 4 1 6 5 8 8s5 7 9 7 7-2 11-3c4 0 8 3 10 6l2 2a70 70 0 006 8c4 5 11 7 17 7a26 26 0 016 0 27 27 0 015 0c7 0 13-2 18-7a62 62 0 005-7l2-3c3-3 7-6 11-6 4 1 7 4 11 3s6-4 8-7 5-7 8-8c5-1 10 3 15 5l1 1a23 23 0 0012 1 30 30 0 0017-8c5-4 8-10 12-15l12 15 3 2a30 30 0 0014 6 23 23 0 0014-2l4-2c3-2 6-4 10-3s6 5 8 8 5 7 9 7 7-2 11-3c4 0 8 3 10 6l1 2 6 8c5 5 11 7 18 7a26 26 0 016 0 27 27 0 015 0c7 0 13-2 18-7l6-9 1-1c3-3 6-6 11-6 3 1 7 4 11 3s6-4 8-7 5-7 8-8 8 1 12 3l2 2a23 23 0 0014 2 30 30 0 0015-7l2-1 12-15c4 5 7 11 12 15l2 1c4 4 9 7 15 7a23 23 0 0013-2c5-2 10-6 15-5 3 1 6 5 8 8s4 7 8 7 7-2 11-3c4 0 8 3 11 6l2 3a58 58 0 005 7c5 5 11 7 18 7a26 26 0 015 0 27 27 0 016 0c6 0 13-2 17-7a56 56 0 005-7l3-3c2-3 6-6 10-6 4 1 7 4 11 3s7-4 9-7 4-7 8-8c5-1 9 3 14 5a23 23 0 0013 3 30 30 0 0016-8l1-1c5-4 9-10 13-15 3 5 7 11 12 15l1 1c5 4 10 7 16 8a23 23 0 0013-3l2-1c4-2 8-5 12-4s6 5 8 8 5 7 9 7 7-2 11-3c4 0 8 3 11 6l1 2 6 8c4 5 11 7 17 7a26 26 0 016 0 27 27 0 015 0c7 0 13-2 18-7l6-8 1-2c3-3 7-6 11-6 4 1 7 4 11 3s7-4 9-7 4-7 8-8c3-1 6 1 9 3l5 2a23 23 0 0013 3 29 29 0 0015-7l2-2c5-4 9-10 12-15 4 5 8 11 13 15v1c5 4 11 7 16 8a23 23 0 0012-2l2-1c4-2 9-6 14-5 4 1 6 5 8 8s5 7 9 7 7-2 11-3c4 0 8 3 10 6l2 2a65 65 0 005 8c5 5 11 7 18 7l7 1v12z"/><path d="M714 9l-8 6 3 10h10l3-10-8-6zM746 20l-14 10 5 16h17l5-16-13-10zM462 9l-9 6 4 10h10l3-10-8-6zM589 3l-11 8 4 12h13l5-12-11-8zM494 20l-14 10 5 16h17l5-16-13-10zM212 6l-8 6 3 9h10l3-9-8-6zM333 4l-8 6 3 10h10l4-10-9-6zM244 17l-14 9 5 16h17l5-16-13-9zM147 3l-8 6 3 10h10l3-10-8-6zM88 0L76 9l5 14h15l4-14-12-9zM938 1l8 6-3 10h-10l-3-10 8-6zM995 31l10 7-4 12h-12l-4-12 10-7zM1045 12l7 5-2 9h-9l-3-9 7-5zM903 3l11 8-4 13h-14l-4-13 11-8zM1275 11l8 6-3 10h-10l-3-10 8-6zM1150 4l8 6-3 10h-10l-3-10 8-6zM1247 27l11 8-4 13h-14l-4-13 11-8zM1526 8l8 6-3 10h-10l-3-10 8-6zM1402 3l8 6-3 9h-10l-3-9 8-6zM1498 24l12 8-5 14h-14l-4-14 11-8zM1719 8l-8 6 3 9h10l4-9-9-6zM1747 23l-11 8 4 14h14l5-14-12-8zM1903 3l-6 5 2 7h8l3-7-7-5zM1951 12l-9 6 4 11h11l4-11-10-6z"/></g></svg>'); 
-                        }
+                <div class="secoffer">
+                    <div class="shapedividers_com-3098"></div>
+                <style type="text/css">
+                    .shapedividers_com-3098{
+                    overflow:hidden;
+                    position:relative;
+                    top: 1px;
+                    height: 200px;
+                    }
+                    .shapedividers_com-3098::before{ 
+                    content:'';
+                    font-family:'shape divider from ShapeDividers.com';
+                    position: absolute;
+                    z-index: 3;
+                    pointer-events: none;
+                    background-repeat: no-repeat;
+                    bottom: -0.1vw;
+                    left: -0.1vw;
+                    right: -0.1vw;
+                    top: -0.1vw; 
+                    background-size: 100% 90px;
+                    background-position: 50% 100%;  background-image: url('data:image/svg+xml;charset=utf8, <svg preserveAspectRatio="xMidYMin slice" xmlns="http://www.w3.org/2000/svg" viewBox="0 -0.2 2000.4 84.2"><g fill="%23ffc107"><circle cx="1334.4" cy="40.4" r="14"/><circle cx="1867.7" cy="40" r="14"/><path d="M1748 30l6-11-6-11h-13l-7 11 7 11h13zM1628 23l4-6-4-7h-7l-4 7 4 6h7zM1978 18l5-8-5-8h-8l-5 8 5 8h8zM1412 23l6-9-6-10h-11l-5 10 5 9h11zM783 52a9 9 0 10-9-9 9 9 0 009 9zM1160 26l7-11-7-12h-13l-6 12 6 11h13zM1040 19l4-6-4-7h-7l-4 7 4 6h7zM825 19l5-9-5-10h-11l-6 10 6 9h11zM697 16l4-6-4-7h-7l-4 7 4 6h7z"/><path d="M83 84h1917V35c-10-8-25-12-40-10a32 32 0 00-11-3c-12-1-15 1-18 2-18 4-24 19-38 32-9 7-17 15-28 15-13 1-24-9-31-20s-11-24-20-33-24-15-34-7c-12 9-10 30-23 37a15 15 0 01-1 1c-6 2-13 1-19-1a58 58 0 01-8-5l-10-6a93 93 0 00-46-14c-6 0-13 0-19 5a12 12 0 00-4 11c1 4 4 8 6 11a11 11 0 011 9 17 17 0 01-15 12h-1c-13 1-24-9-31-20s-11-24-20-33-24-15-34-7c-11 9-10 28-21 36a16 16 0 01-2 1c-6 3-14 3-20 0a50 50 0 01-6-3l-12-8a93 93 0 00-46-14c-5 0-11 0-15 3-5 2-8 6-8 11a35 35 0 00-7 1 44 44 0 00-13 4c-19 10-19 16-35 23-12 5-27 4-40 4s-28 1-41-4c-15-7-16-13-35-23a44 44 0 00-13-4 35 35 0 00-7-1c0-5-3-9-7-11-5-3-11-3-16-3a93 93 0 00-45 14l-13 8a50 50 0 01-6 3c-6 3-14 3-20 0a16 16 0 01-2-1c-10-8-9-27-20-36-10-8-26-3-35 7s-13 22-20 33-18 21-31 20a17 17 0 01-15-12 11 11 0 011-9c2-3 5-7 5-11a12 12 0 00-4-11c-5-5-12-5-19-5a93 93 0 00-46 14l-9 6a58 58 0 01-9 5c-6 2-13 3-18 1a15 15 0 01-2-1c-13-7-11-28-22-37-11-8-26-3-35 7s-13 22-20 33-18 21-31 20a24 24 0 01-4 0c-9-3-16-9-23-15-14-12-21-28-39-32l-4-1-3 1c-18 4-25 20-39 32-7 6-14 12-23 15a24 24 0 01-4 0c-13 1-24-9-31-20s-11-24-20-33-25-15-35-7c-11 9-10 30-22 37a15 15 0 01-2 1c-6 2-13 1-19-1a58 58 0 01-8-5l-10-6a93 93 0 00-45-14c-7 0-14 0-19 5a12 12 0 00-5 11c1 4 4 8 6 11a11 11 0 011 9 17 17 0 01-15 12c-13 1-24-9-31-20s-11-24-20-33-25-15-35-7c-11 9-10 28-21 36a16 16 0 01-1 1c-6 3-14 3-21 0a50 50 0 01-5-3l-13-8a93 93 0 00-45-14c-6 0-11 0-16 3-4 2-8 6-8 11a35 35 0 00-7 1 44 44 0 00-12 4c-19 10-20 16-35 23-13 5-27 4-41 4s-28 1-40-4c-16-7-17-13-35-23a44 44 0 00-13-4 35 35 0 00-7-1c0-5-4-9-8-11-5-3-10-3-16-3H0v61z"/><circle cx="125.9" cy="40.4" r="14"/><circle cx="659.1" cy="40" r="14"/><path d="M539 30l7-11-7-11h-13l-6 11 6 11h13zM42 21l5-8-6-8h-9l-5 9 6 8 9-1zM770 18l4-8-4-8h-9l-4 8 4 8h9zM927 30l4-8-4-7h-9l-5 7 5 8h9zM204 23l5-9-5-10h-11l-6 10 6 9h11z"/></g></svg>'); 
+                    }
 
-                        @media (min-width:2100px){
-                        .shapedividers_com-3632::before{
-                        background-size: 100% calc(2vw + 90px);
-                        }
-                        }
-                    </style>
-                    <div class="container-fluid bg-warning">
+                    @media (min-width:2100px){
+                    .shapedividers_com-3098::before{
+                    background-size: 100% calc(2vw + 90px);
+                    }
+                    }
+                </style>
+                <!--<div class="container-fluid bg-warning py-3">
+                    <div class="row">
+                        <div class="col-sm-12 col-lg-4 d-flex justify-content-around align-items-center sos">
+                            <div class="card text-center w-75 shadow-lg mb-5 bg-body rounded">
+                                  <div class="card-header text-dark fs-1" style="background: #F1E784;">
+                                    <i class="fa-solid fa-business-time text-dark"></i>
+                                  </div>
+                                  <div class="card-body text-dark">
+                                    <p class="card-text text-dark">With supporting text below as a natural lead-in to additional content.</p>
+                                    <p class="num text-dark fs-1" data-goal="50">0</p>
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-lg-4 d-flex justify-content-around align-items-center sos">
+                            <div class="card text-center w-75 shadow-lg mb-5 bg-body rounded">
+                                  <div class="card-header text-dark fs-1" style="background: #F1E784;">
+                                    <i class="fa-solid fa-paintbrush text-dark"></i>
+                                  </div>
+                                  <div class="card-body text-dark">
+                                    <p class="card-text text-dark">With supporting text below as a natural lead-in to additional content.</p>
+                                    <p class="num text-dark fs-1" data-goal="50">0</p>
+                                  </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-lg-4 d-flex justify-content-around align-items-center sos">
+                            <div class="card text-center w-75 shadow-lg mb-5 bg-body rounded">
+                                  <div class="card-header text-dark fs-1" style="background: #F1E784;">
+                                    <i class="fa-solid fa-desktop text-dark"></i>
+                                  </div>
+                                  <div class="card-body text-dark">
+                                    <p class="card-text text-dark">With supporting text below as a natural lead-in to additional content.</p>
+                                    <p class="num text-dark fs-1" data-goal="50">0</p>
+                                  </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>-->
+                <div class="container-fluid bg-warning py-4">
+                    <div class="row three">
+                        <div class="col-md-3 col-sm-6" data-aos="flip-right" data-aos-duration="1000">
+                            <div class="counter">
+                                <div class="counter-content">
+                                    <div class="counter-icon">
+                                        <i class="fa-solid fa-face-smile"></i>
+                                    </div>
+                                    <h3>Satisfied<br>Client</h3>
+                                </div>
+                                <span class="counter-value" data-goal="137">0</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6" data-aos="flip-right" data-aos-duration="1000">
+                            <div class="counter green">
+                                <div class="counter-content">
+                                    <div class="counter-icon">
+                                        <i class="fa-solid fa-cart-shopping"></i>
+                                    </div>
+                                    <h3>Product<br>Purshased</h3>
+                                </div>
+                                <span class="counter-value" data-goal="239">0</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6" data-aos="flip-left" data-aos-duration="1000">
+                            <div class="counter blue">
+                                <div class="counter-content">
+                                    <div class="counter-icon">
+                                        <i class="fa fa-rocket"></i>
+                                    </div>
+                                    <h3>Web Development</h3>
+                                </div>
+                                <span class="counter-value" data-goal="124">0</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6" data-aos="flip-left" data-aos-duration="1000">
+                            <div class="counter black">
+                                <div class="counter-content">
+                                    <div class="counter-icon">
+                                        <i class="fa-solid fa-gift"></i>
+                                    </div>
+                                    <h3>Existing<br>Designes</h3>
+                                </div>
+                                <span class="counter-value" data-goal="124">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="shapedividers_com-2053"></div>
+                    <style type="text/css">
+                                                    
+                    .shapedividers_com-2053{
+                    overflow:hidden;
+                    position:relative;
+                    bottom: 1px;
+                    height: 200px;
+                    }
+                    .shapedividers_com-2053::before{ 
+                    content:'';
+                    font-family:'shape divider from ShapeDividers.com';
+                    position: absolute;
+                    z-index: 3;
+                    pointer-events: none;
+                    background-repeat: no-repeat;
+                    bottom: -0.1vw;
+                    left: -0.1vw;
+                    right: -0.1vw;
+                    top: -0.1vw; 
+                    background-size: 100% 90px;
+                    background-position: 50% 0%;  background-image: url('data:image/svg+xml;charset=utf8, <svg preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000.4 84.2"><g fill="%23ffc107"><circle cx="666" cy="43.7" r="14"/><circle cx="132.7" cy="44.1" r="14"/><path d="M253 54l-7 12 7 11h12l7-11-7-12h-12zM372 61l-3 6 3 7h8l4-7-4-6h-8zM22 67l-4 7 4 8h9l4-8-4-7h-9zM588 61l-6 10 6 9h11l6-9-6-10h-11zM1217 33a9 9 0 109 8 9 9 0 00-9-8zM840 58l-6 12 6 11h13l6-11-6-12h-13zM960 65l-4 7 4 6h7l4-6-4-7h-7zM1175 65l-5 10 5 9h12l5-9-5-10h-12zM1303 68l-4 7 4 6h7l4-6-4-7h-7z"/><path d="M1918 0H0v49c10 8 26 12 40 10a32 32 0 0011 3c13 1 15-1 18-1 18-5 25-20 39-32 8-7 16-15 27-16 13-1 24 9 31 20s11 24 20 33 25 15 35 7c11-9 9-29 22-37a15 15 0 012-1c6-2 13-1 18 1a58 58 0 019 5l10 6a93 93 0 0045 14c7 0 14 0 19-5a12 12 0 004-11c0-4-3-7-5-11a11 11 0 01-1-9 17 17 0 0115-12c13-1 24 9 31 20s11 24 20 33 25 15 35 7c11-9 10-28 21-36a16 16 0 011-1c6-3 14-2 21 0a50 50 0 015 3l13 8a93 93 0 0045 14c5 0 11 0 16-3 4-2 7-6 8-11a35 35 0 006 0 44 44 0 0013-5c19-10 20-16 35-22 13-6 27-5 41-5s28-1 40 5c16 6 17 12 35 22a44 44 0 0013 5 35 35 0 007 0c0 5 3 9 8 11 5 3 10 3 16 3a93 93 0 0045-14l12-8a50 50 0 016-3c6-2 14-3 20 0a16 16 0 012 1c11 8 10 27 21 36 10 8 26 3 34-7s14-22 21-33 17-21 30-20h1a17 17 0 0115 12 11 11 0 01-1 9c-2 4-5 7-6 11a12 12 0 004 11c6 5 13 5 20 5a93 93 0 0045-14l10-6a58 58 0 018-5c6-2 13-3 19-1a15 15 0 011 1c13 8 11 28 23 37 10 8 26 3 35-7s13-22 20-33 17-21 30-20a24 24 0 015 1c8 2 16 9 23 15 14 12 21 27 38 32l4 1 4-1c18-5 24-20 38-32 7-6 15-13 24-15a24 24 0 014-1c13-1 24 9 30 20s12 24 21 33 24 15 34 7c12-9 10-29 23-37a15 15 0 011-1c6-2 13-1 19 1a58 58 0 018 5l10 6a93 93 0 0045 14c7 0 14 0 20-5a12 12 0 004-11c-1-4-4-7-6-11a11 11 0 01-1-9 17 17 0 0115-12h1c13-1 24 9 31 20s11 24 20 33 24 15 34 7c11-9 10-28 21-36a16 16 0 012-1c6-3 14-2 20 0a50 50 0 016 3l12 8a93 93 0 0046 14c5 0 11 0 15-3 5-2 8-6 8-11a35 35 0 007 0 44 44 0 0013-5c18-10 19-16 35-22 12-6 26-5 40-5s28-1 41 5c15 6 16 12 35 22a44 44 0 0013 5 35 35 0 006 0c1 5 4 9 8 11 5 3 11 3 16 3h3V0z"/><circle cx="1874.5" cy="43.7" r="14"/><circle cx="1341.3" cy="44.1" r="14"/><path d="M1461 54l-6 12 6 11h13l6-11-6-12h-13zM1958 63l-4 8 5 8h10l4-9-5-8-10 1zM1231 67l-5 7 5 8h8l5-8-5-7h-8zM1074 54l-5 8 5 8h9l4-8-4-8h-9zM1796 61l-5 10 5 9h12l5-9-5-10h-12z"/></g></svg>'); 
+                    }
+
+                    @media (min-width:2100px){
+                    .shapedividers_com-2053::before{
+                    background-size: 100% calc(2vw + 90px);
+                    }
+                    }
+                </style>
+                </style>
+            </div>
+                </div>
+            </div>
+                    </div>
+                </div>
+                
+        </div>
+    </div>
+</div>
+<style type="text/css">
+body {
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", sans-serif;
+  margin: 0;
+}
+section {
+  min-height: 50vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.nums{
+    border: 2px solid red;
+    width: 70%;
+    height: 40vh;
+}
+.three .col-lg-4{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+</style>
+                <div class="container-fluid mt-5">
                         <div class="row">
-                            <div class="col-6">
-                                <div class="container">
-                                    <h2 class="section-title px-5 fs-1 text-dark">
-                                <span class="px-2 text-dark display-8 fst-italic bg-warning text-center" style="font-family: verdana;">Categories</span>
-                            </h2>
-                                    <div class="row gx-5">
+                            <div class="col-lg-6 col-md-3 col-sm-6 d-flex justify-content-left pl-lg-5 align-items-center d-none d-lg-block">
+                                <img src="img/biblio.png" class="d-none d-lg-block" width="400">
+                            </div>
+                            <div class="col-md-3 col-sm-12">
+                            <div class="d-block d-lg-none d-flex justify-content-around align-items-center">
+                                    <button class="btn btn-white border-3 border-dark fs-1 text-white p-5 bg-dark rounded-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+                                      <p style="font-size: 4em;"><i class="fa-solid fa-book-open text-white"></i></p><br>Press to see categories
+                                    </button>
+
+                                    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+                                      <div class="offcanvas-header">
+                                        <h5 class="offcanvas-title display-4" id="offcanvasExampleLabel">Categories</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                                      </div>
+                                      <div class="offcanvas-body">
+                                        <div class="d-flex justify-content-around align-items-center flex-wrap">
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-calculator text-dark mr-2"></i> Accountant</a>
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-certificate text-dark mr-2"></i> Fiscalite</a>
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-list-check text-dark mr-2"></i> Gestion</a>
+                                                
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-dna text-dark mr-2"></i> Biologie</a>
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-atom text-dark mr-2"></i> Physique</a>
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-microchip text-dark mr-2"></i> Technologie</a>
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-coins text-dark mr-2"></i> Economie</a>
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-music text-dark mr-2"></i> Music</a>
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-masks-theater text-dark mr-2"></i> Theatre</a>
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-leaf text-dark mr-2"></i> Nature</a>
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-book text-dark mr-2"></i> Religiuos</a>
+                                                <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-user-tie text-dark mr-2"></i> Professional</a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+                                <div class="col-6 d-none d-lg-block pr-lg-5">
+                                    <div class="row gx-5" style="width: 650%;">
+                                        <h2 class="section-title px-5 fs-sm-3 fs-1 text-dark hi">
+                                            <span class="px-2 text-dark display-8 fst-italic hello" style="font-family: verdana;"><span class="bg-warning p-2 rounded-2">Cate</span> gories</span>
+                                        </h2>
                                             <div class="col-lg-3">
                                                 <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-calculator text-dark mr-2"></i> Accountant</a>
                                                 <a href="" class="categories shadow p-3 mb-5 bg-body rounded"><i class="fa-solid fa-certificate text-dark mr-2"></i> Fiscalite</a>
@@ -750,445 +993,191 @@
                                             transform: scale(1.15);
                                         }
                                     </style>
-                                </div>
                             </div>
-                        </div>
-                    </div>-->
-            <!--<div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/258/456/original/beautiful-brochure-design-template-vector.jpg" alt="">
+                                </div>
+                            </div> 
+                            </div>
                     </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/thumbnails/000/246/148/small_2x/modern-business-brochure-template-design-illustration.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light">
-                        <a href="detail.html" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/258/515/original/modern-template-brochure-creative-colorful-vector.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://th.bing.com/th/id/OIP.Y0tKZhAmXtkv7fBz2O_YjgHaHa?pid=ImgDet&w=626&h=626&rs=1" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://th.bing.com/th/id/OIP.RjMCdgtdp14PY-lB7yQTRQHaHa?pid=ImgDet&w=490&h=490&rs=1" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://image.freepik.com/free-vector/colorful-modern-business-brochure-template-vector-design_1035-15045.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/258/753/original/modern-stylish-buisness-brochure-card-template-vector.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/258/576/non_2x/modern-business-brochure-template-professional-design-illustrati-vector.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/258/827/original/business-professional-brochure-template-design-vector.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/258/856/non_2x/abstract-green-business-brochure-template-with-wave-design-vector.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/258/445/original/business-brochure-creative-template-colorful-vector-illustration.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/thumbnails/000/246/082/small_2x/modern-blue-business-brochure-template-design.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/258/605/large_2x/business-flyer-template-professional-design-illustration-vector.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/258/765/original/professional-business-flyer-template-card-colorful-wave-design-vector.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/258/479/original/vector-professional-business-flyer-template-card-colorful-wave-design.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://i.pinimg.com/736x/b1/e4/3f/b1e43f139c85f6d684b239aeb847129a.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/246/989/original/modern-stylish-buisness-brochure-card-template-vector.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://i.pinimg.com/736x/b1/e4/3f/b1e43f139c85f6d684b239aeb847129a.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/246/343/original/beautiful-business-brochure-creative-template-vector-design.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 col-sm-12 pb-1 pl-4">
-                <div class="card product-item border-0 mb-4">
-                    <div class="card-header product-img position-relative overflow-hidden bg-transparent border p-0">
-                        <img class="img-fluid w-100" src="https://static.vecteezy.com/system/resources/previews/000/258/760/original/business-brochure-creative-template-design-vector.jpg" alt="">
-                    </div>
-                    <div class="card-body border-left border-right text-center p-0 pt-4 pb-3">
-                        <h6 class="text-truncate mb-3">Colorful Stylish Shirt</h6>
-                        <div class="d-flex justify-content-center">
-                            <h6>$123.00</h6><h6 class="text-muted ml-2"><del>$123.00</del></h6>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex justify-content-between bg-light border">
-                        <a href="" class="btn btn-sm text-dark p-0"><i class="fas fa-eye
-                         mr-1"></i></a>
-                        <a href="" class="btn btn-sm p-0"><i class="fas fa-shopping-cart
-                         mr-1"></i></a>
-                    </div>
-                </div>-->
-            </div>
-            </div>
-                    </div>
-                </div>
-                
-        </div>
-    </div>
-</div>
-<style type="text/css">
-    * {
-  box-sizing: border-box;
-  color: black;
-}
-body {
-  font-family: "Trebuchet MS", "Lucida Sans Unicode", sans-serif;
+    <div class="shapedividers_com-8466"></div>
+    <footer>
+   <div class="content">
+     <div class="left box">
+       <div class="upper">
+         <div class="topic">About us</div>
+         <p>We are designers team passion of making creative designes & looking for client happiness with speacial touch</p>
+       </div>
+       <div class="lower">
+         <div class="topic">Contact us</div>
+         <div class="phone">
+           <a href="#"><i class="fas fa-phone-volume"></i>+2126 2301 1384</a>
+         </div>
+         <div class="email">
+           <a href="#"><i class="fas fa-envelope"></i>olaitanorganization@gmail.com</a>
+         </div>
+       </div>
+     </div>
+     <div class="middle box">
+       <div class="topic">Our Services</div>
+       <div><a href="#">Web Design, Development</a></div>
+       <div><a href="#">Business Model</a></div>
+       <div><a href="#">Professional Courses</a></div>
+       <div><a href="#">Technical assistance service in transport & logistics</a></div>
+       <div><a href="#">Study office in business strategies in management, audit and architecture</a></div>
+       <div><a href="#">Real estate and student assistance</a></div>
+     </div>
+     <div class="right box">
+       <div class="topic">RoadMap for you</div>
+       <p>
+         <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3308.8145638868273!2d-6.852013985524991!3d33.97160542942405!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xda76df796441487%3A0xcfc9cb09bc3740c4!2sOLAITAN%20ORGANIZATION!5e0!3m2!1sen!2sma!4v1656321533902!5m2!1sen!2sma" width="100%" height="180" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+         <div class="media-icons">
+           <a href="https://www.facebook.com/OLaitanBusinessAttitude/"><i class="fab fa-facebook-f"></i></a>
+           <a href="https://www.instagram.com/olaitan_organization"><i class="fab fa-instagram"></i></a>
+           <a href="https://www.youtube.com/channel/UCGvv-EsEhYaSWDaP82rF2XQ"><i class="fab fa-youtube"></i></a>
+           <a href="https://www.linkedin.com/company/olaitan-organization"><i class="fab fa-linkedin-in"></i></a>
+         </div>
+       </p>
+     </div>
+   </div>
+   <div class="bottom">
+     <p>Copyright © 2022 <a href="#">Olaitan Organization</a> All rights reserved</p>
+   </div>
+ </footer>
+ <style type="text/css">
+     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+*{
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins',sans-serif;
+  text-decoration: none;
 }
-section {
-  min-height: 50vh;
+footer{
+  width: 100%;
+  background: #111;
+}
+footer .content{
+  max-width: 1350px;
+  margin: auto;
+  padding: 20px;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
-.nums{
-    border: 2px solid red;
-    width: 70%;
-    height: 40vh;
+footer .content p,a{
+  color: #fff;
 }
-.three .col-lg-4{
-    display: flex;
-    justify-content: center;
-    align-items: center;
+footer .content .box{
+  width: 33%;
+  transition: all 0.4s ease;
 }
-</style>
-<div class="container-fluid">
-    <div class="row three justify-content-around align-items-center">
-        <div class="col-lg-4">
-            <div class="nums">
-                <div>
-                    <div>sadc</div>
-                    <div class="num" data-goal="50">0</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="nums">
-                <div class="num" data-goal="50">0</div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="nums">
-                <div class="num" data-goal="50">0</div>
-            </div>
-        </div>
-    </div>
-</div>
+footer .content .topic{
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 16px;
+
+}
+footer .content p{
+  text-align: justify;
+}
+footer .content .lower .topic{
+  margin: 24px 0 5px 0;
+}
+footer .content .lower i{
+  padding-right: 16px;
+}
+footer .content .middle{
+  padding-left: 80px;
+}
+footer .content .middle a{
+  line-height: 32px;
+}
+footer .content .right input[type="text"]{
+  height: 45px;
+  width: 100%;
+  outline: none;
+  color: #d9d9d9;
+  background: #000;
+  border-radius: 5px;
+  padding-left: 10px;
+  font-size: 17px;
+  border: 2px solid #222222;
+}
+footer .content .right input[type="submit"]{
+  height: 42px;
+  width: 100%;
+  font-size: 18px;
+  color: #d9d9d9;
+  background: #eb2f06;
+  outline: none;
+  border-radius: 5px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  margin-top: 12px;
+  border: 2px solid #eb2f06;
+  transition: all 0.3s ease-in-out;
+}
+.content .right input[type="submit"]:hover{
+  background: none;
+  color:  #eb2f06;
+}
+footer .content .media-icons a{
+  font-size: 16px;
+  height: 45px;
+  width: 45px;
+  display: inline-block;
+  text-align: center;
+  line-height: 43px;
+  border-radius: 5px;
+  border: 2px solid #222222;
+  margin: 30px 5px 0 0;
+  transition: all 0.3s ease;
+}
+.content .media-icons a:hover{
+  border-color: #ffc107;
+  background: #ffc107;
+}
+footer .bottom{
+  width: 100%;
+  text-align: right;
+  color: #d9d9d9;
+  padding: 0 40px 5px 0;
+}
+footer .bottom a{
+  color: #ffc107;
+}
+footer a{
+  transition: all 0.3s ease;
+}
+footer a:hover{
+  color: #ffc107;
+}
+@media (max-width:1100px) {
+  footer .content .middle{
+    padding-left: 50px;
+  }
+}
+@media (max-width:950px){
+  footer .content .box{
+    width: 50%;
+  }
+  .content .right{
+    margin-top: 40px;
+  }
+}
+@media (max-width:560px){
+  footer{
+    position: relative;
+  }
+  footer .content .box{
+    width: 100%;
+    margin-top: 30px;
+  }
+  footer .content .middle{
+    padding-left: 0;
+  }
+}
+ </style>
 <!--<section class="three">
   <div class="nums">
     <div class="num" data-goal="50">0</div>
@@ -1196,46 +1185,12 @@ section {
     <div class="num" data-goal="60">0</div>
   </div>
 </section>-->
-<section class="four">Section Four</section>
-    <script type="text/javascript">
-        let nums = document.querySelectorAll(".col-lg-4 .nums .num");
-let section = document.querySelector(".three");
-let started = false; // Function Started ? No
-console.log("hi",section.offsetTop);
-window.onscroll = function () {
-  if (window.scrollY >= 1500) {
-    if (!started) {
-      nums.forEach((num) => startCount(num));
-    }
-    started = true;
-  }
-};
-
-function startCount(el) {
-  let goal = el.dataset.goal;
-  let count = setInterval(() => {
-    el.textContent++;
-    if (el.textContent == goal) {
-      clearInterval(count);
-    }
-  }, 2000 / goal);
-}
-        const slidingNewsletter = document.querySelector('.slide-in');
-
-window.addEventListener('scroll', () => {
-
-    const {scrollTop, clientHeight} = document.documentElement;
-
-    // console.log(scrollTop, clientHeight);
-
-    const topElementToTopViewport = slidingNewsletter.getBoundingClientRect().top;
-
-    console.log(topElementToTopViewport);
-
-    if(scrollTop > (scrollTop + topElementToTopViewport).toFixed() - clientHeight * 0.8){
-        slidingNewsletter.classList.add('active')
-    }
-})
+<!-- Footer Start -->
+    
+    <!-- Footer End -->
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+            AOS.init();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Back to Top -->
